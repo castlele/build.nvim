@@ -7,7 +7,7 @@ local actionState = require("telescope.actions.state")
 local config = require("telescope.config").values
 
 local FM = require("cluautils.file_manager")
-require("cluautils.string_utils")
+local strutils, ab = require("cluautils.string_utils")
 
 ---@class build.TelescopeOptions
 ---@field enabled boolean
@@ -174,7 +174,7 @@ local function searchBuild()
                   return
                end
 
-               local formattedCommand = string.split(command, "\n")
+               local formattedCommand = strutils.split(command, "\n")
 
                vim.api.nvim_buf_set_lines(
                   self.state.bufnr,
@@ -203,8 +203,7 @@ end
 function M.build(command)
    reloadConfigurationFile()
 
-   ---@diagnostic disable-next-line
-   local cmd = string.trim(command)
+   local cmd = strutils.trim(command)
 
    ---@diagnostic disable-next-line
    local fun = getCodeAsFunction(conf, cmd) or defaultCommands[cmd]
@@ -233,7 +232,7 @@ function M.completion(completion)
    if
       not completion
       or type(completion) ~= "string"
-      or string.is_empty(completion)
+      or strutils.isEmpty(completion)
    then
       return configurations
    end
