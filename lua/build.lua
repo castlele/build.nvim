@@ -7,7 +7,7 @@ local actionState = require("telescope.actions.state")
 local config = require("telescope.config").values
 
 local FM = require("cluautils.file_manager")
-local strutils, ab = require("cluautils.string_utils")
+local strutils = require("cluautils.string_utils")
 
 ---@class build.TelescopeOptions
 ---@field enabled boolean
@@ -198,6 +198,19 @@ local function searchBuild()
       :find()
 end
 
+local function enableTelescopeIntegration()
+   if not M.isTelescopeEnabled() then
+      return
+   end
+
+   vim.keymap.set(
+      "n",
+      M.opts.telescope.keymap,
+      searchBuild,
+      { noremap = true, silent = true }
+   )
+end
+
 ---@param command string
 ---@return (fun(): string)?
 function M.build(command)
@@ -257,12 +270,16 @@ end
 ---@param opts build.BuildOptions?
 function M.setup(opts)
    if opts then
-      M.opts.buildFileName = opts.buildFileName or M.opts.buildFileName
+      if strutils.isNilOrEmpty(opts.buildFileName) then
+         M.opts.buildFileName = M.opts.buildFileName
+      else
+         M.opts.buildFileName = opts.buildFileName
+      end
 
       local t = opts.telescope
 
       if t then
-         M.opts.telescope.enabled = t.enabled or M.opts.telescope.enabled
+         M.opts.telescope.enabled = ((t.enabled or M.opts.telescope.enabled) and M.opts.telescope.enabled)
          M.opts.telescope.keymap = t.keymap or M.opts.telescope.keymap
       end
    end
@@ -273,20 +290,7 @@ function M.setup(opts)
       nargs = 1,
    })
 
-   M.enableTelescopeIntegration()
-end
-
-function M.enableTelescopeIntegration()
-   if not M.isTelescopeEnabled() then
-      return
-   end
-
-   vim.keymap.set(
-      "n",
-      M.opts.telescope.keymap,
-      searchBuild,
-      { noremap = true, silent = true }
-   )
+   enableTelescopeIntegration()
 end
 
 return M
