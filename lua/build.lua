@@ -29,18 +29,6 @@ local M = {
    },
 }
 
----@return string
-function M.getBuildFile()
-   return M.opts.buildFileName
-end
-
----@return boolean
-function M.isTelescopeEnabled()
-   local opts = M.opts
-
-   return opts.telescope.enabled
-end
-
 local function editBuildFile()
    vim.cmd("vsplit")
    vim.cmd("edit " .. M.getBuildFile())
@@ -123,31 +111,25 @@ local function getCodeAsFunction(configurations, command)
    end
 end
 
----@param command string
----@return (fun(): string)?
-function M.buildInTerm(command)
-   local term = require("toggleterm.terminal").Terminal
-   local fun = M.build(command)
+local function buildCommandBinding(args)
+   local commandName = args.args
+   local command = M.getCommand(commandName)
 
-   if not fun then
+   if not command then
       return
    end
 
-   local terminalCommand = fun()
+   local commandToRun = command()
 
-   if not terminalCommand then
+   if type(commandToRun) == "string" then
+      M.buildInTerm(commandToRun)
       return
    end
 
-   term
-      :new({
-         direction = "horizontal",
-         cmd = terminalCommand,
-         display_name = command,
-         hidden = false,
-         close_on_exit = false,
-      })
-      :toggle()
+   if type(commandToRun) == "function" then
+      M.runCommand(commandName, commandToRun)
+      return
+   end
 end
 
 local function searchBuild()
@@ -190,7 +172,7 @@ local function searchBuild()
             actions.select_default:replace(function()
                actions.close(prompt_bufnr)
                local selection = actionState.get_selected_entry()
-               M.buildInTerm(selection[1])
+               buildCommandBinding { args = selection[1] }
             end)
             return true
          end,
@@ -211,12 +193,24 @@ local function enableTelescopeIntegration()
    )
 end
 
----@param command string
----@return (fun(): string)?
-function M.build(command)
+---@return string
+function M.getBuildFile()
+   return M.opts.buildFileName
+end
+
+---@return boolean
+function M.isTelescopeEnabled()
+   local opts = M.opts
+
+   return opts.telescope.enabled
+end
+
+---@param commandName string
+---@return (fun(): string|fun())?
+function M.getCommand(commandName)
    reloadConfigurationFile()
 
-   local cmd = strutils.trim(command)
+   local cmd = strutils.trim(commandName)
 
    ---@diagnostic disable-next-line
    local fun = getCodeAsFunction(conf, cmd) or defaultCommands[cmd]
@@ -233,7 +227,17 @@ end
 ---@return string?
 function M.asString(command)
    if not defaultCommandsAsStr[command] then
-      return M.build(command)()
+      local commandRes = M.getCommand(command)()
+
+      if type(commandRes) == "string" then
+         return commandRes
+      end
+
+      if type(commandRes) == "function" then
+         return "Your custom function to run"
+      end
+
+      return nil
    end
 
    return defaultCommandsAsStr[command]
@@ -263,8 +267,44 @@ function M.completion(completion)
    return filteredConf
 end
 
-local function buildCommandBinding(args)
-   M.buildInTerm(args.args)
+---@param terminalCommand string
+function M.buildInTerm(terminalCommand)
+   local term = require("toggleterm.terminal").Terminal
+
+   term
+      :new({
+         direction = "horizontal",
+         cmd = terminalCommand,
+         display_name = terminalCommand,
+         hidden = false,
+         close_on_exit = false,
+      })
+      :toggle()
+end
+
+---@param commandName string
+---@param command fun()
+function M.runCommand(commandName, command)
+   local success, result = pcall(command)
+
+   if success then
+      local message = "Command {%s} finished successfully!"
+
+      if result and type(result) == "string" then
+         message = message .. " Result is " .. result
+      end
+
+      vim.notify(string.format(message, commandName))
+   else
+      vim.notify(
+         string.format(
+            "Command {%s} finished with error: %s",
+            commandName,
+            result
+         ),
+         vim.log.levels.ERROR
+      )
+   end
 end
 
 ---@param opts build.BuildOptions?
@@ -279,7 +319,9 @@ function M.setup(opts)
       local t = opts.telescope
 
       if t then
-         M.opts.telescope.enabled = ((t.enabled or M.opts.telescope.enabled) and M.opts.telescope.enabled)
+         M.opts.telescope.enabled = (
+            (t.enabled or M.opts.telescope.enabled) and M.opts.telescope.enabled
+         )
          M.opts.telescope.keymap = t.keymap or M.opts.telescope.keymap
       end
    end

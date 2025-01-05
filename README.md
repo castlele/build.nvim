@@ -16,10 +16,20 @@ local function runTestsCommand(cmd)
    return string.format(runner, cmd)
 end
 
----@diagnostic disable-next-line
+---@return string
+local function getCurrentFileName()
+   local filePath = vim.fn.expand("%")
+   local pathComponents = vim.fn.split(filePath, "/")
+   local file = pathComponents[#pathComponents]
+   local fileName = vim.fn.split(file, "%.")
+
+   return fileName[#fileName]
+end
+
 conf = {
    install = "sudo luarocks make",
    remove = "sudo luarocks remove cluautils",
+   currentTest = runTestsCommand(getCurrentFileName()),
    allTest = runTestsCommand("*"),
    threadTest = [[
       bear -- make build
@@ -32,11 +42,14 @@ conf = {
    stringTest = runTestsCommand("string_utils*"),
    jsonTest = runTestsCommand("json*"),
    fmTest = runTestsCommand("file_manager*"),
+   tableTest = runTestsCommand("table_utils*"),
+   hashmapTest = runTestsCommand("*hashmap*"),
+   linkedlistTest = runTestsCommand("linkedlist*"),
 }
 ```
+As you can see, your commands can return either string representation of terminal command or a function to run! Strings will run in `toggleterm` while functions will just run.
 
 After saving build file you can use all your declared commands like this: `:Build <your_command_name>`.
-
 
 You can edit your configuration file with `:Build edit` command.
 
