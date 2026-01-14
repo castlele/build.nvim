@@ -16,7 +16,6 @@ function M:new(buildFile)
 
    this.picker = require("mini.pick")
 
-
    setmetatable(this, self)
 
    self.__index = self

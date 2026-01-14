@@ -28,7 +28,7 @@ vim.cmd("edit " .. M.getBuildFile())
       }
 
       this.defaultCommands = {
-         edit = function ()
+         edit = function()
             this:editBuildFile()
          end,
          generate = function()
@@ -57,7 +57,6 @@ conf = {
    self.__index = self
 
    return this
-
 end
 
 function M:buildCommand(args)
@@ -111,7 +110,7 @@ function M:searchBuild()
    if self.type == "none" then
       vim.notify(
          "Can't determine availabe search engine type! Make sure build.nvim plugin depends on minipick or telescope",
-            vim.log.levels.WARN
+         vim.log.levels.WARN
       )
       return
    end

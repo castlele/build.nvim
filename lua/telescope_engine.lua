@@ -11,7 +11,7 @@ local engine = require("engine")
 ---@field config table
 local M = {}
 
-setmetatable(M, { __index = engine})
+setmetatable(M, { __index = engine })
 
 ---@param buildFile string
 ---@return build.TelescopeEngine

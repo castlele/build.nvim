@@ -42,28 +42,18 @@ local function initEngine()
    local type = M.opts.engineConfig.type
 
    if type == "minipick" then
-      M.engine = require("minipick_engine"):new(
-         M.opts.buildFileName
-      )
+      M.engine = require("minipick_engine"):new(M.opts.buildFileName)
    elseif type == "telescope" then
-      M.engine = require("telescope_engine"):new(
-         M.opts.buildFileName
-      )
+      M.engine = require("telescope_engine"):new(M.opts.buildFileName)
    else
-      M.engine = require("engine"):new(
-         type,
-         M.opts.buildFileName
-      )
+      M.engine = require("engine"):new(type, M.opts.buildFileName)
    end
 end
 
 local function setKeymaps()
-   vim.keymap.set(
-      "n",
-      M.opts.engineConfig.keymap,
-      function() M.engine:searchBuild() end,
-      { noremap = true, silent = true }
-   )
+   vim.keymap.set("n", M.opts.engineConfig.keymap, function()
+      M.engine:searchBuild()
+   end, { noremap = true, silent = true })
 end
 
 ---@param opts build.BuildOptions?
@@ -85,9 +75,13 @@ function M.setup(opts)
 
    initEngine()
 
-   vim.api.nvim_create_user_command("Build", function() M.engine:buildCommand() end, {
+   vim.api.nvim_create_user_command("Build", function()
+      M.engine:buildCommand()
+   end, {
       desc = "build.nvim plugin. More here: https://github.com/castlele/build.nvim",
-      complete = function(completion) M.engine:completion(completion) end,
+      complete = function(completion)
+         M.engine:completion(completion)
+      end,
       nargs = 1,
    })
 
