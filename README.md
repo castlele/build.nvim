@@ -63,13 +63,21 @@ You can edit your configuration file with `:Build edit` command.
 
 2. [`akinsho/toggleterm`](https://github.com/akinsho/toggleterm.nvim) plugin. Manages running commands.
 
+3. One of the search engines:
+
+    - [`mini.pick`](https://github.com/nvim-mini/mini.pick)
+    - [`telescope`](https://github.com/nvim-telescope/telescope.nvim)
+
 ---
 
 Install plugin with your favourite plugin manager like this:
 
 ```lua
 require("lazy").setup {
-    { "castlele/build.nvim" },
+    {
+        "castlele/build.nvim",
+        opts = true,
+    },
 }
 ```
 
@@ -86,21 +94,9 @@ With no arguments provided `build` plugin will use default settings:
 ```lua
 require("build").setup {
     buildFileName = "build.lua",
-    telescope = {
-        enabled = pcall(require, "telescope"),
+    engineConfig = {
+        type = "minipick", -- can fallback to telescope
         keymap = "<leader>B",
-    },
-}
-```
-
-## Telescope integration
-
-By default if you have a [`telescope`](https://github.com/nvim-telescope/telescope.nvim) plugin installed you will be able to navigate over your builds with telescope search. Default key combination is `<leader>B`, but you can change it with:
-
-```lua
-require("build").setup {
-    telescope = {
-        keymap = "your key combination here",
     },
 }
 ```
