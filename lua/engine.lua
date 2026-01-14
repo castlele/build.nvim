@@ -61,6 +61,11 @@ end
 
 function M:buildCommand(args)
    local commandName = args.args
+
+   if not commandName or #commandName == 0 then
+      return
+   end
+
    local command = self:getCommand(commandName)
 
    if not command then
